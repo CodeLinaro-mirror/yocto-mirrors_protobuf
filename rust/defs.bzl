@@ -4,9 +4,11 @@ Disclaimer: This project is experimental, under heavy development, and should no
 be used yet."""
 
 load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
+load("@rules_rust//rust:defs.bzl", "rust_common")
 load(
     "//rust:aspects.bzl",
     "RustProtoInfo",
+    "label_to_crate_name",
     "proto_rust_toolchain_label",
     "rust_cc_proto_library_aspect",
     "rust_upb_proto_library_aspect",
@@ -89,8 +91,13 @@ def _rust_proto_library_impl(ctx):
     rust_proto_info = dep[RustProtoInfo]
 
     dep_variant_info = rust_proto_info.dep_variant_info
+    crate_info = dep_variant_info.crate_info
+    fields = {field: getattr(crate_info, field) for field in dir(crate_info)}
+    fields["name"] = label_to_crate_name(_user_visible_label(ctx))
+    crate_info_with_rust_proto_name = rust_common.crate_info(**fields)
+
     return [
-        dep_variant_info.crate_info,
+        crate_info_with_rust_proto_name,
         dep_variant_info.dep_info,
         dep_variant_info.cc_info,
         DefaultInfo(files = dep_variant_info.crate_info.srcs),
