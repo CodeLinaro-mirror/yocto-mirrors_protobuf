@@ -283,6 +283,19 @@
   }
 }
 
+- (void)testLimit {
+  TestAllTypes* message = [self allSetRepeatedCount:kGPBDefaultRepeatCount];
+  NSData* rawBytes = message.data;
+  GPBCodedInputStream* input = [GPBCodedInputStream streamWithData:rawBytes];
+  [input pushLimit:8];
+  XCTAssertEqual([input getBytesUntilLimit], 8u);
+  [input popLimit:3];
+  XCTAssertEqual([input getBytesUntilLimit], 3u);
+  [input readTag];
+  XCTAssertEqual([input position], 1u);
+  XCTAssertEqual([input getBytesUntilLimit], 2u);
+}
+
 - (void)testReadHugeBlob {
   // Allocate and initialize a 1MB blob.
   NSMutableData* blob = [NSMutableData dataWithLength:1 << 20];
