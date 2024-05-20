@@ -657,6 +657,30 @@ TEST(FeatureResolverLifetimesTest, DynamicPool) {
               ElementsAre(HasSubstr("pb.TestFeatures.removed_feature")));
 }
 
+TEST(FeatureResolverLifetimesTest, EmptyValueSupportInvalid2023) {
+  FeatureSet features = ParseTextOrDie(R"pb(
+    [pb.test] { file_feature: VALUE_EMPTY_SUPPORT }
+  )pb");
+  auto results = FeatureResolver::ValidateFeatureLifetimes(EDITION_2023,
+                                                           features, nullptr);
+  EXPECT_THAT(results.errors,
+              ElementsAre(HasSubstr(
+                  "pb.VALUE_EMPTY_SUPPORT defines a support window")));
+  EXPECT_THAT(results.warnings, IsEmpty());
+}
+
+TEST(FeatureResolverLifetimesTest, ValueSupportInvalid2023) {
+  FeatureSet features = ParseTextOrDie(R"pb(
+    [pb.test] { file_feature: VALUE_FUTURE }
+  )pb");
+  auto results = FeatureResolver::ValidateFeatureLifetimes(EDITION_2023,
+                                                           features, nullptr);
+  EXPECT_THAT(
+      results.errors,
+      ElementsAre(HasSubstr("pb.VALUE_FUTURE defines a support window")));
+  EXPECT_THAT(results.warnings, IsEmpty());
+}
+
 class FakeErrorCollector : public io::ErrorCollector {
  public:
   FakeErrorCollector() = default;

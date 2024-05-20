@@ -296,6 +296,17 @@ void CollectLifetimeResults(Edition edition, const Message& message,
     // Skip fields that don't have feature support specified.
     if (!field->options().has_feature_support()) continue;
 
+    if (edition <= EDITION_2023 && field->enum_type() != nullptr) {
+      int number = message.GetReflection()->GetEnumValue(message, field);
+      auto value = field->enum_type()->FindValueByNumber(number);
+      if (value != nullptr && value->options().has_feature_support()) {
+        results.errors.emplace_back(
+            absl::StrCat("Feature ", value->full_name(),
+                         " defines a support window, which isn't supported by "
+                         "edition 2023"));
+      }
+    }
+
     const FieldOptions::FeatureSupport& support =
         field->options().feature_support();
     if (edition < support.edition_introduced()) {
