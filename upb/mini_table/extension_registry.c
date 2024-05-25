@@ -21,6 +21,8 @@
 
 #define EXTREG_KEY_SIZE (sizeof(upb_MiniTable*) + sizeof(uint32_t))
 
+UPB_LINKARR_DECLARE(upb_AllExts, const upb_MiniTableExtension*);
+
 struct upb_ExtensionRegistry {
   upb_Arena* arena;
   upb_strtable exts;  // Key is upb_MiniTable* concatenated with fieldnum.
@@ -68,6 +70,18 @@ failure:
     upb_strtable_remove2(&r->exts, buf, EXTREG_KEY_SIZE, NULL);
   }
   return false;
+}
+
+bool upb_ExtensionRegistry_AddAllLinkedExtensions(upb_ExtensionRegistry* r) {
+  const upb_MiniTableExtension* const* start = UPB_LINKARR_START(upb_AllExts);
+  const upb_MiniTableExtension* const* stop = UPB_LINKARR_STOP(upb_AllExts);
+  for (const upb_MiniTableExtension* const* p = start; p < stop; p++) {
+    // Windows can introduce zero padding, so we have to skip zeroes.
+    if (*p != 0) {
+      if (!upb_ExtensionRegistry_Add(r, *p)) return false;
+    }
+  }
+  return true;
 }
 
 const upb_MiniTableExtension* upb_ExtensionRegistry_Lookup(
