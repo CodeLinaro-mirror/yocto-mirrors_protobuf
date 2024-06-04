@@ -55,6 +55,20 @@ rust_upb_proto_library(
     deps = [UNITTEST_PROTO3_OPTIONAL_TARGET],
 )
 
+rust_cc_proto_library(
+    name = "unittest_edition_cpp_rust_proto",
+    testonly = True,
+    visibility = ["//rust/test/shared:__subpackages__"],
+    deps = [UNITTEST_EDITION_TARGET],
+)
+
+rust_upb_proto_library(
+    name = "unittest_edition_upb_rust_proto",
+    testonly = True,
+    visibility = ["//rust/test/shared:__subpackages__"],
+    deps = [UNITTEST_EDITION_TARGET],
+)
+
 proto_library(
     name = "parent_proto",
     srcs = ["parent.proto"],
