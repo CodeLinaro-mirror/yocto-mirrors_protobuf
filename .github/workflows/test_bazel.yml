@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ ubuntu, windows, macos ]
+        runner: [ ubuntu, windows, windows, windows, windows, windows, windows, windows, windows, windows, windows, windows, windows, macos ]
         bazelversion: [ '7.1.1' ]
         bzlmod: [true, false ]
         include:

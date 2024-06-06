@@ -19,7 +19,9 @@ namespace compiler {
 // This is a version of protoc that has no built-in code generators.
 // See go/protobuf-toolchain-protoc
 int ProtocMain(int argc, char* argv[]) {
+#ifndef PROTOBUF_LOGTOSTDERR
   absl::InitializeLog();
+#endif
 
   CommandLineInterface cli;
   cli.AllowPlugins("protoc-");

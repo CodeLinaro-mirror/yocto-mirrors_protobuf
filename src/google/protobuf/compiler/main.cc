@@ -35,7 +35,9 @@ namespace protobuf {
 namespace compiler {
 
 int ProtobufMain(int argc, char* argv[]) {
+#ifndef PROTOBUF_LOGTOSTDERR
   absl::InitializeLog();
+#endif
 
   CommandLineInterface cli;
   cli.AllowPlugins("protoc-");
