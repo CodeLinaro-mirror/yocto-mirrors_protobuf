@@ -841,9 +841,11 @@ filegroup(
         "unittest_proto3_lite.proto",
         "unittest_proto3_optional.proto",
         "unittest_retention.proto",
+        "unittest_string_type.proto",
         "unittest_well_known_types.proto",
     ],
     visibility = ["//:__subpackages__"],
+    deps = [":cpp_features_proto"],
 )
 
 filegroup(
