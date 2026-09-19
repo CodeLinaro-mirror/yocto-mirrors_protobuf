@@ -63,6 +63,7 @@ cc_library(
         ":conformance_cc_proto",
         ":failure_list_trie_node",
         ":fork_pipe_runner",
+        ":recording_test_runner",
         ":test_runner",
         "//src/google/protobuf",
         "//src/google/protobuf:descriptor_legacy",
@@ -75,6 +76,7 @@ cc_library(
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -122,6 +124,7 @@ test_suite(
         "binary_wireformat_test",
         "failure_list_trie_node_test",
         "naming_test",
+        "recording_test_runner_test",
         "test_manager_test",
         "testee_test",
     ],
@@ -187,16 +190,50 @@ cc_library(
 
 cc_library(
     name = "fork_pipe_runner",
-    srcs = ["fork_pipe_runner.cc"],
+    srcs = [
+        "fork_pipe_runner.cc",
+        "fork_pipe_runner_posix.cc",
+        "fork_pipe_runner_win32.cc",
+    ],
     hdrs = ["fork_pipe_runner.h"],
     deps = [
         ":conformance_cc_proto",
         ":test_runner",
         "//src/google/protobuf:endian",
         "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/strings",  # fork_pipe_runner_win32.cc
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "recording_test_runner",
+    srcs = ["recording_test_runner.cc"],
+    hdrs = ["recording_test_runner.h"],
+    deps = [
+        ":conformance_cc_proto",
+        ":test_runner",
+        "//src/google/protobuf",
+        "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "recording_test_runner_test",
+    srcs = ["recording_test_runner_test.cc"],
+    deps = [
+        ":conformance_cc_proto",
+        ":recording_test_runner",
+        ":test_runner",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 
