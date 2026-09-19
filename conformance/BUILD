@@ -187,13 +187,18 @@ cc_library(
 
 cc_library(
     name = "fork_pipe_runner",
-    srcs = ["fork_pipe_runner.cc"],
+    srcs = [
+        "fork_pipe_runner.cc",
+        "fork_pipe_runner_posix.cc",
+        "fork_pipe_runner_win32.cc",
+    ],
     hdrs = ["fork_pipe_runner.h"],
     deps = [
         ":conformance_cc_proto",
         ":test_runner",
         "//src/google/protobuf:endian",
         "@abseil-cpp//absl/log:absl_log",
+        "@abseil-cpp//absl/strings",  # fork_pipe_runner_win32.cc
         "@abseil-cpp//absl/strings:str_format",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
@@ -205,6 +210,7 @@ cc_library(
     testonly = 1,
     srcs = ["binary_wireformat.cc"],
     hdrs = ["binary_wireformat.h"],
+    visibility = ["//upb/conformance:__pkg__"],
     deps = [
         "//src/google/protobuf:endian",
         "//src/google/protobuf:protobuf_lite",
