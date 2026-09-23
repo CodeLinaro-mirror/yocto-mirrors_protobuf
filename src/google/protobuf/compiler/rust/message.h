@@ -27,6 +27,10 @@ void GenerateRs(Context& ctx, const Descriptor& msg, const upb::DefPool& pool);
 // Generates code for a particular message in `.pb.thunk.cc`.
 void GenerateThunksCc(Context& ctx, const Descriptor& msg);
 
+// Whether `file`, or any file it imports directly or indirectly, declares
+// extensions.
+bool FileOrImportsHaveExtensions(const FileDescriptor& file);
+
 }  // namespace rust
 }  // namespace compiler
 }  // namespace protobuf
