@@ -202,7 +202,8 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
     return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
+  descriptor() {
     return GetDescriptor();
   }
   [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
@@ -241,25 +242,12 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
   void CopyFrom(const CppFeatures& from);
   using Super_::MergeFrom;
   void MergeFrom(const CppFeatures& from) { CppFeatures::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
   [[nodiscard]] bool IsInitialized() const {
     return true;
   }
-  private:
-  static void Clear(::google::protobuf::MessageLite& msg);
-  [[nodiscard]] static::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  [[nodiscard]] static ::uint8_t* PROTOBUF_NULLABLE _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NULLABLE target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
-
-  public:
   #if defined(PROTOBUF_CUSTOM_VTABLE)
-  ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE void Clear() {
+  ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE void
+  Clear() {
     Clear(*this);
   }
   PROTOBUF_ALWAYS_INLINE [[nodiscard]] ::size_t ByteSizeLong() const {
@@ -276,30 +264,13 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
   [[nodiscard]] ::size_t ByteSizeLong() const final;
   [[nodiscard]] ::uint8_t* PROTOBUF_NULLABLE _InternalSerialize(
       ::uint8_t* PROTOBUF_NULLABLE target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL
+          stream) const final;
   #endif  // PROTOBUF_CUSTOM_VTABLE
   [[nodiscard]] int GetCachedSize() const {
     return _impl_._cached_size_.Get();
   }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CppFeatures* PROTOBUF_NONNULL other);
-
- private:
-  static ::absl::string_view FullMessageName() { return "pb.CppFeatures"; }
-
-  explicit CppFeatures(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CppFeatures(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CppFeatures& from);
-  CppFeatures(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CppFeatures&& from) noexcept
-      : CppFeatures(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-
- public:
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -359,45 +330,21 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
   void clear_string_type() ;
   [[nodiscard]] ::pb::CppFeatures_StringType string_type() const;
   void set_string_type(::pb::CppFeatures_StringType value);
-
-  private:
-  ::pb::CppFeatures_StringType _internal_string_type() const;
-  void _internal_set_string_type(::pb::CppFeatures_StringType value);
-
-  public:
   // optional bool legacy_closed_enum = 1 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_FIELD, targets = TARGET_TYPE_FILE, edition_defaults = {
   [[nodiscard]] bool has_legacy_closed_enum() const;
   void clear_legacy_closed_enum() ;
   [[nodiscard]] bool legacy_closed_enum() const;
   void set_legacy_closed_enum(bool value);
-
-  private:
-  bool _internal_legacy_closed_enum() const;
-  void _internal_set_legacy_closed_enum(bool value);
-
-  public:
   // optional bool enum_name_uses_string_view = 3 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_ENUM, targets = TARGET_TYPE_FILE, edition_defaults = {
   [[nodiscard]] bool has_enum_name_uses_string_view() const;
   void clear_enum_name_uses_string_view() ;
   [[nodiscard]] bool enum_name_uses_string_view() const;
   void set_enum_name_uses_string_view(bool value);
-
-  private:
-  bool _internal_enum_name_uses_string_view() const;
-  void _internal_set_enum_name_uses_string_view(bool value);
-
-  public:
   // optional .pb.CppFeatures.RepeatedType repeated_type = 4 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_FIELD, targets = TARGET_TYPE_FILE, edition_defaults = {
   [[nodiscard]] bool has_repeated_type() const;
   void clear_repeated_type() ;
   [[nodiscard]] ::pb::CppFeatures_RepeatedType repeated_type() const;
   void set_repeated_type(::pb::CppFeatures_RepeatedType value);
-
-  private:
-  ::pb::CppFeatures_RepeatedType _internal_repeated_type() const;
-  void _internal_set_repeated_type(::pb::CppFeatures_RepeatedType value);
-
-  public:
   // @@protoc_insertion_point(class_scope:pb.CppFeatures)
  private:
   class _Internal;
@@ -433,6 +380,41 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFeatures final :
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_google_2fprotobuf_2fcpp_5ffeatures_2eproto;
+
+  static ::absl::string_view FullMessageName() { return "pb.CppFeatures"; }
+
+  explicit CppFeatures(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  CppFeatures(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CppFeatures& from);
+  CppFeatures(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CppFeatures&& from) noexcept
+      : CppFeatures(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
+  static void Clear(::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NULLABLE _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NULLABLE target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(CppFeatures* PROTOBUF_NONNULL other);
+
+  // optional .pb.CppFeatures.StringType string_type = 2 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_FIELD, targets = TARGET_TYPE_FILE, edition_defaults = {
+  ::pb::CppFeatures_StringType _internal_string_type() const;
+  void _internal_set_string_type(::pb::CppFeatures_StringType value);
+  // optional bool legacy_closed_enum = 1 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_FIELD, targets = TARGET_TYPE_FILE, edition_defaults = {
+  bool _internal_legacy_closed_enum() const;
+  void _internal_set_legacy_closed_enum(bool value);
+  // optional bool enum_name_uses_string_view = 3 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_ENUM, targets = TARGET_TYPE_FILE, edition_defaults = {
+  bool _internal_enum_name_uses_string_view() const;
+  void _internal_set_enum_name_uses_string_view(bool value);
+  // optional .pb.CppFeatures.RepeatedType repeated_type = 4 [retention = RETENTION_RUNTIME, targets = TARGET_TYPE_FIELD, targets = TARGET_TYPE_FILE, edition_defaults = {
+  ::pb::CppFeatures_RepeatedType _internal_repeated_type() const;
+  void _internal_set_repeated_type(::pb::CppFeatures_RepeatedType value);
 };
 
 // ===================================================================

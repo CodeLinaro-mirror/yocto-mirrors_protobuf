@@ -110,7 +110,8 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFileOptions fina
     return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
+  descriptor() {
     return GetDescriptor();
   }
   [[nodiscard]] static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL
@@ -149,25 +150,12 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFileOptions fina
   void CopyFrom(const CppFileOptions& from);
   using Super_::MergeFrom;
   void MergeFrom(const CppFileOptions& from) { CppFileOptions::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
   [[nodiscard]] bool IsInitialized() const {
     return true;
   }
-  private:
-  static void Clear(::google::protobuf::MessageLite& msg);
-  [[nodiscard]] static::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  [[nodiscard]] static ::uint8_t* PROTOBUF_NULLABLE _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NULLABLE target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
-
-  public:
   #if defined(PROTOBUF_CUSTOM_VTABLE)
-  ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE void Clear() {
+  ABSL_ATTRIBUTE_REINITIALIZES PROTOBUF_ALWAYS_INLINE void
+  Clear() {
     Clear(*this);
   }
   PROTOBUF_ALWAYS_INLINE [[nodiscard]] ::size_t ByteSizeLong() const {
@@ -184,30 +172,13 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFileOptions fina
   [[nodiscard]] ::size_t ByteSizeLong() const final;
   [[nodiscard]] ::uint8_t* PROTOBUF_NULLABLE _InternalSerialize(
       ::uint8_t* PROTOBUF_NULLABLE target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL
+          stream) const final;
   #endif  // PROTOBUF_CUSTOM_VTABLE
   [[nodiscard]] int GetCachedSize() const {
     return _impl_._cached_size_.Get();
   }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CppFileOptions* PROTOBUF_NONNULL other);
-
- private:
-  static ::absl::string_view FullMessageName() { return "pb.file.CppFileOptions"; }
-
-  explicit CppFileOptions(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CppFileOptions(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CppFileOptions& from);
-  CppFileOptions(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CppFileOptions&& from) noexcept
-      : CppFileOptions(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-
- public:
 
   [[nodiscard]] ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
@@ -222,12 +193,6 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFileOptions fina
   [[nodiscard]] ::absl::string_view namespace_() const;
   template <typename Arg_ = ::std::string&&>
   void set_namespace_(Arg_&& arg);
-
-  private:
-  ::absl::string_view _internal_namespace_() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_namespace_(::absl::string_view value);
-
-  public:
   // @@protoc_insertion_point(class_scope:pb.file.CppFileOptions)
  private:
   class _Internal;
@@ -260,6 +225,32 @@ class PROTOBUF_EXPORT  PROTOBUF_FUTURE_ADD_EARLY_WARN_UNUSED CppFileOptions fina
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_google_2fprotobuf_2fcpp_5ffile_5foptions_2eproto;
+
+  static ::absl::string_view FullMessageName() { return "pb.file.CppFileOptions"; }
+
+  explicit CppFileOptions(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  CppFileOptions(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CppFileOptions& from);
+  CppFileOptions(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CppFileOptions&& from) noexcept
+      : CppFileOptions(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
+
+  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
+                        const ::google::protobuf::MessageLite& from_msg);
+  static void Clear(::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  [[nodiscard]] static ::uint8_t* PROTOBUF_NULLABLE _InternalSerialize(
+      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NULLABLE target,
+      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
+  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(CppFileOptions* PROTOBUF_NONNULL other);
+
+  // string namespace = 1;
+  ::absl::string_view _internal_namespace_() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_namespace_(::absl::string_view value);
 };
 
 // ===================================================================
