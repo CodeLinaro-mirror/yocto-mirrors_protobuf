@@ -33,6 +33,8 @@ def _package_naming_impl(ctx):
             values["platform"] = "win64"
         else:
             values["platform"] = "win32"
+    elif ctx.attr.platform:
+        values["platform"] = ctx.attr.platform
     else:
         values["platform"] = "unknown"
 
@@ -41,6 +43,7 @@ def _package_naming_impl(ctx):
 package_naming = rule(
     implementation = _package_naming_impl,
     attrs = {
+        "platform": attr.string(),
         # Necessary data dependency for find_cpp_toolchain.
         "_cc_toolchain": attr.label(default = Label("@bazel_tools//tools/cpp:current_cc_toolchain")),
     },
