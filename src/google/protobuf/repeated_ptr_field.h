@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -91,12 +92,40 @@ class RepeatedPtrFieldTest;
 template <typename Element>
 auto ConvertToPtrIterator(RepeatedPtrIterator<Element> it);
 
-// Swaps two non-overlapping blocks of memory of size `N`
+// Swaps two non-overlapping blocks of memory of size `N`.
+//
+// Uses word-sized scalar `memcpy` loads and stores rather than
+// `std::swap_ranges(a, a + N, b)` because under `-fsanitize=address` +
+// `-fsanitize=pointer-overflow`, per-byte sanitizer checks on `char*` loop
+// increments prevent LLVM from coalescing `swap_ranges` into word swaps.
+// Swapping 8-byte pointers one byte at a time tears the 64-bit pointer in
+// memory and registers while in flight, causing LeakSanitizer (`StopTheWorld`)
+// to miss the pointer root if another thread triggers a leak check mid-swap.
 template <size_t N>
-inline void memswap(char* PROTOBUF_RESTRICT a, char* PROTOBUF_RESTRICT b) {
-  // `PROTOBUF_RESTRICT` tells compiler that blocks do not overlapping which
-  // allows it to generate optimized code for swap_ranges.
-  std::swap_ranges(a, a + N, b);
+inline void memswap([[maybe_unused]] char* PROTOBUF_RESTRICT a,
+                    [[maybe_unused]] char* PROTOBUF_RESTRICT b) {
+  [[maybe_unused]] auto swap_elem = [](auto tag, char* PROTOBUF_RESTRICT x,
+                                       char* PROTOBUF_RESTRICT y) {
+    decltype(tag) tx, ty;
+    std::memcpy(&tx, x, sizeof(tx));
+    std::memcpy(&ty, y, sizeof(ty));
+    std::memcpy(x, &ty, sizeof(ty));
+    std::memcpy(y, &tx, sizeof(tx));
+  };
+  if constexpr (N >= 8) {
+    for (size_t i = 0; i <= N - 8; i += 8) {
+      swap_elem(uint64_t{}, a + i, b + i);
+    }
+  }
+  if constexpr ((N & 4) != 0) {
+    swap_elem(uint32_t{}, a + (N & ~size_t{7}), b + (N & ~size_t{7}));
+  }
+  if constexpr ((N & 2) != 0) {
+    swap_elem(uint16_t{}, a + (N & ~size_t{3}), b + (N & ~size_t{3}));
+  }
+  if constexpr ((N & 1) != 0) {
+    swap_elem(uint8_t{}, a + (N & ~size_t{1}), b + (N & ~size_t{1}));
+  }
 }
 
 // A trait that tells offset of `T::resolver_`.
