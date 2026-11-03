@@ -1205,6 +1205,35 @@ class AnyTest(unittest.TestCase):
     )
     self.assertEqual(golden, serialized)
 
+  def testAnyEqualsDoesNotUnpack(self):
+    # Any messages are compared by their raw type_url and value fields, so two
+    # different encodings of the same logical payload are not equal.
+    any1 = any_pb2.Any(
+        type_url='type.googleapis.com/google.protobuf.internal.TestAny',
+        value=b'\x10\x01',
+    )
+    any2 = any_pb2.Any(
+        type_url='type.googleapis.com/google.protobuf.internal.TestAny',
+        value=b'\x10\x00\x10\x01',
+    )
+    self.assertNotEqual(any1, any2)
+
+  def testDeeplyNestedAnyEquals(self):
+    # Comparing deeply nested Any-in-Any chains must not recursively unpack.
+    nested1 = any_pb2.Any()
+    nested2 = any_pb2.Any()
+    leaf = well_known_types_test_pb2.TestAny(int_value=42)
+    nested1.Pack(leaf)
+    nested2.Pack(leaf)
+    for _ in range(1000):
+      parent1 = any_pb2.Any()
+      parent1.Pack(nested1)
+      nested1 = parent1
+      parent2 = any_pb2.Any()
+      parent2.Pack(nested2)
+      nested2 = parent2
+    self.assertEqual(nested1, nested2)
+
   def testJsonStruct(self):
     value = struct_pb2.Value(struct_value=struct_pb2.Struct())
     value_dict = json_format.MessageToDict(
