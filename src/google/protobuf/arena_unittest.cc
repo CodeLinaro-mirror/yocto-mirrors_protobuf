@@ -703,6 +703,30 @@ TEST_F(ArenaTest, Parsing) {
             strlen(arena_message->optional_string().c_str()));
 }
 
+TEST_F(ArenaTest, ParseIntoSubmessageOnOtherArena) {
+  Arena parent_arena;
+  Arena child_arena;
+
+  NestedTestAllTypes data;
+  data.mutable_payload();
+  data.mutable_child()->mutable_payload()->add_repeated_nested_message();
+  data.mutable_child()->mutable_child()->mutable_payload();
+
+  auto parent = Arena::MakeUnique<NestedTestAllTypes>(&parent_arena);
+  auto* child = Arena::Create<NestedTestAllTypes>(&child_arena);
+
+  parent->unsafe_arena_set_allocated_child(child);
+  ASSERT_TRUE(parent->MergeFromString(data.SerializeAsString()));
+
+  // Verify that the parent arena is unchanged, and the newly allocated members
+  // of the child are on the child arena.
+  EXPECT_EQ(parent->payload().GetArena(), &parent_arena);
+  EXPECT_EQ(child->payload().GetArena(), &child_arena);
+  EXPECT_EQ(child->payload().repeated_nested_message(0).GetArena(),
+            &child_arena);
+  EXPECT_EQ(child->child().payload().GetArena(), &child_arena);
+}
+
 TEST_F(ArenaTest, UnknownFields) {
   TestAllTypes original;
   TestUtil::SetAllFields(&original);

@@ -618,6 +618,19 @@ static inline const ClassData* GetClassDataFromAux(
   }
 }
 
+template <bool group_coding>
+PROTOBUF_NOINLINE const char* TcParser::ParseCrossArenaSubmessage(
+    MessageLite* inner_msg, const char* ptr, ParseContext* ctx,
+    const ClassData* inner_class_data, uint32_t start_tag) {
+  const TcParseTableBase* inner_table = inner_class_data->GetTcParseTable();
+  ParseContext::ScopedArena scoped_arena(ctx, inner_msg->GetArena());
+  const auto inner_loop = [&](const char* ptr) {
+    return ParseLoop(inner_msg, ptr, ctx, inner_table);
+  };
+  return group_coding ? ctx->ParseGroupInlined(ptr, start_tag, inner_loop)
+                      : ctx->ParseLengthDelimitedInlined(ptr, inner_loop);
+}
+
 template <typename TagType, bool group_coding>
 PROTOBUF_ALWAYS_INLINE const char* TcParser::SingularParseMessageAuxImpl(
     PROTOBUF_TC_PARAM_DECL) {
@@ -629,22 +642,34 @@ PROTOBUF_ALWAYS_INLINE const char* TcParser::SingularParseMessageAuxImpl(
   auto saved_tag = UnalignedLoad<TagType>(ptr);
   ptr += sizeof(TagType);
   SetCachedHasBit(hasbits, data.hasbit_idx());
-  SyncHasbits(msg, hasbits, table);
   auto& field = RefAt<MessageLite*>(msg, data.offset());
   const auto* class_data = table->field_aux(data.aux_idx())->class_data();
   // Keep `inner_msg` in a local variable to avoid a second read in the
   // ParseLoop call.
   MessageLite* inner_msg = field;
+  Arena* arena = ctx->arena();
   if (inner_msg == nullptr) {
-    inner_msg = field = NewMessage(class_data, msg->GetArena());
+    inner_msg = field = NewMessage(class_data, arena);
+  } else if (ABSL_PREDICT_FALSE(inner_msg->GetArena() != arena)) {
+    // The existing submessage lives on a different arena than `msg`.
+    SyncHasbits(msg, hasbits, table);
+    return ParseCrossArenaSubmessage<group_coding>(
+        inner_msg, ptr, ctx, class_data,
+        group_coding ? FastDecodeTag(saved_tag) : 0);
   }
+  ABSL_DCHECK_EQ(arena, msg->GetArena());
   const auto* inner_table = class_data->GetTcParseTable();
   const auto inner_loop = [&](const char* ptr) {
     return ParseLoop(inner_msg, ptr, ctx, inner_table);
   };
-  return group_coding
-             ? ctx->ParseGroupInlined(ptr, FastDecodeTag(saved_tag), inner_loop)
-             : ctx->ParseLengthDelimitedInlined(ptr, inner_loop);
+  ptr = group_coding
+            ? ctx->ParseGroupInlined(ptr, FastDecodeTag(saved_tag), inner_loop)
+            : ctx->ParseLengthDelimitedInlined(ptr, inner_loop);
+
+  if (ABSL_PREDICT_FALSE(ptr == nullptr)) {
+    PROTOBUF_MUSTTAIL return Error(PROTOBUF_TC_PARAM_NO_DATA_PASS);
+  }
+  PROTOBUF_MUSTTAIL return ToTagDispatch(PROTOBUF_TC_PARAM_NO_DATA_PASS);
 }
 
 PROTOBUF_NOINLINE const char* TcParser::FastMcS1(PROTOBUF_TC_PARAM_DECL) {
@@ -689,7 +714,8 @@ PROTOBUF_ALWAYS_INLINE const char* TcParser::RepeatedParseMessageAuxImpl(
   }
   PROTOBUF_PREFETCH_WITH_OFFSET(ptr, 256);
   SetCachedHasBit(hasbits, data.hasbit_idx());
-  Arena* arena = msg->GetArena();
+  Arena* arena = ctx->arena();
+  ABSL_DCHECK_EQ(arena, msg->GetArena());
   const auto expected_tag = UnalignedLoad<TagType>(ptr);
   const auto aux = *table->field_aux(data.aux_idx());
   auto& field = RefAt<RepeatedPtrFieldBase>(msg, data.offset());
@@ -1716,7 +1742,8 @@ PROTOBUF_ALWAYS_INLINE const char* ReadString(const char* ptr,
                                               ParseContext* ctx, TcFieldData,
                                               ArenaStringPtr& field,
                                               const MessageLite& parent) {
-  Arena* arena = parent.GetArena();
+  Arena* arena = ctx->arena();
+  ABSL_DCHECK_EQ(arena, parent.GetArena());
   if (arena == nullptr) {
     int size = ReadSize(&ptr);
     if (!ptr) return nullptr;
@@ -1941,7 +1968,7 @@ inline void SetHasForRepeated(const FieldEntry& entry, MessageLite* msg) {
 void TcParser::InitOneof(const TcParseTableBase* table,
                          const ClassData* class_data,
                          const TcParseTableBase::FieldEntry& entry,
-                         MessageLite* msg) {
+                         Arena* arena, MessageLite* msg) {
   uint16_t kind = entry.type_card & field_layout::kFkMask;
   uint16_t rep = entry.type_card & field_layout::kRepMask;
   if (kind == field_layout::kFkString) {
@@ -1955,7 +1982,7 @@ void TcParser::InitOneof(const TcParseTableBase* table,
         break;
       }
       case field_layout::kRepCord: {
-        absl::Cord* field = Arena::Create<absl::Cord>(msg->GetArena());
+        absl::Cord* field = Arena::Create<absl::Cord>(arena);
         RefAt<absl::Cord*>(msg, entry.offset) = field;
         break;
       }
@@ -1970,7 +1997,7 @@ void TcParser::InitOneof(const TcParseTableBase* table,
       case field_layout::kRepMessage:
       case field_layout::kRepGroup: {
         auto& field = RefAt<MessageLite*>(msg, entry.offset);
-        field = NewMessage(class_data, msg->GetArena());
+        field = NewMessage(class_data, arena);
         break;
       }
       default:
@@ -1996,10 +2023,12 @@ void TcParser::ChangeOneof(const TcParseTableBase* table,
   // If the member is already active, then it should be merged. We're done.
   if (current_case == field_num) return;
 
+  Arena* arena = ctx->arena();
+
   if (current_case == 0) {
     // If the member is empty, we don't have anything to clear.
     // We must create a new member object.
-    InitOneof(table, class_data, entry, msg);
+    InitOneof(table, class_data, entry, arena, msg);
     return;
   }
 
@@ -2015,13 +2044,13 @@ void TcParser::ChangeOneof(const TcParseTableBase* table,
         break;
       }
       case field_layout::kRepMString: {
-        if (!internal::HasArena(*msg)) {
+        if (arena == nullptr) {
           RefAt<MicroString>(msg, current_entry->offset).Destroy();
         }
         break;
       }
       case field_layout::kRepCord: {
-        if (!internal::HasArena(*msg)) {
+        if (arena == nullptr) {
           delete RefAt<absl::Cord*>(msg, current_entry->offset);
         }
         break;
@@ -2037,7 +2066,7 @@ void TcParser::ChangeOneof(const TcParseTableBase* table,
       case field_layout::kRepMessage:
       case field_layout::kRepGroup: {
         auto& field = RefAt<MessageLite*>(msg, current_entry->offset);
-        if (!internal::HasArena(*msg)) {
+        if (arena == nullptr) {
           delete field;
         }
         break;
@@ -2047,7 +2076,7 @@ void TcParser::ChangeOneof(const TcParseTableBase* table,
         return;
     }
   }
-  InitOneof(table, class_data, entry, msg);
+  InitOneof(table, class_data, entry, arena, msg);
 }
 
 namespace {
@@ -2589,7 +2618,8 @@ PROTOBUF_NOINLINE const char* TcParser::MpString(PROTOBUF_TC_PARAM_DECL) {
   switch (rep) {
     case field_layout::kRepAString: {
       auto& field = MutableField<ArenaStringPtr, is_split>(msg, table, entry);
-      Arena* arena = msg->GetArena();
+      Arena* arena = ctx->arena();
+      ABSL_DCHECK_EQ(arena, msg->GetArena());
       if (arena) {
         ptr = ctx->ReadArenaString(ptr, &field, arena);
       } else {
@@ -2691,7 +2721,8 @@ PROTOBUF_NOINLINE const char* TcParser::MpRepeatedString(
 
   const uint16_t rep = type_card & field_layout::kRepMask;
   const uint16_t xform_val = type_card & field_layout::kTvMask;
-  auto* arena = msg->GetArena();
+  auto* arena = ctx->arena();
+  ABSL_DCHECK_EQ(arena, msg->GetArena());
   switch (rep) {
     case field_layout::kRepSString: {
       auto& field =
@@ -2786,22 +2817,34 @@ PROTOBUF_NOINLINE const char* TcParser::MpMessage(PROTOBUF_TC_PARAM_DECL) {
     ChangeOneof(table, class_data, entry, data.tag() >> 3, ctx, msg);
   }
 
-  SyncHasbits(msg, hasbits, table);
-
   MessageLite*& field = MutableField<MessageLite*, is_split>(msg, table, entry);
 
   // Keep `inner_msg` in a local variable to avoid a second read in the
   // ParseLoop call.
   MessageLite* inner_msg = field;
+  Arena* arena = ctx->arena();
   if (inner_msg == nullptr) {
-    inner_msg = field = NewMessage(class_data, msg->GetArena());
+    inner_msg = field = NewMessage(class_data, arena);
+  } else if (ABSL_PREDICT_FALSE(inner_msg->GetArena() != arena)) {
+    // The existing submessage lives on a different arena than `msg`.
+    SyncHasbits(msg, hasbits, table);
+    return is_group ? ParseCrossArenaSubmessage<true>(inner_msg, ptr, ctx,
+                                                      class_data, decoded_tag)
+                    : ParseCrossArenaSubmessage<false>(inner_msg, ptr, ctx,
+                                                       class_data, decoded_tag);
   }
+  ABSL_DCHECK_EQ(arena, msg->GetArena());
   const auto* inner_table = class_data->GetTcParseTable();
   const auto inner_loop = [&](const char* ptr) {
     return ParseLoopPreserveNone(inner_msg, ptr, ctx, inner_table);
   };
-  return is_group ? ctx->ParseGroupInlined(ptr, decoded_tag, inner_loop)
-                  : ctx->ParseLengthDelimitedInlined(ptr, inner_loop);
+  ptr = is_group ? ctx->ParseGroupInlined(ptr, decoded_tag, inner_loop)
+                 : ctx->ParseLengthDelimitedInlined(ptr, inner_loop);
+
+  if (ABSL_PREDICT_FALSE(ptr == nullptr)) {
+    PROTOBUF_MUSTTAIL return Error(PROTOBUF_TC_PARAM_NO_DATA_PASS);
+  }
+  PROTOBUF_MUSTTAIL return ToTagDispatch(PROTOBUF_TC_PARAM_NO_DATA_PASS);
 }
 
 template <bool is_split, bool is_group>
@@ -2838,7 +2881,8 @@ const char* TcParser::MpRepeatedMessageOrGroup(PROTOBUF_TC_PARAM_DECL) {
 
   const char* ptr2 = ptr;
   uint32_t next_tag;
-  Arena* arena = msg->GetArena();
+  Arena* arena = ctx->arena();
+  ABSL_DCHECK_EQ(arena, msg->GetArena());
   do {
     MessageLite* value = AddMessage(class_data, field, arena);
     const auto inner_loop = [&](const char* ptr) {
